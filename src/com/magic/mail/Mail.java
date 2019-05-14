@@ -1,6 +1,5 @@
 package com.magic.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -9,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.event.MessageCountAdapter;
@@ -50,13 +48,17 @@ public abstract class Mail implements MailInterface {
 		this.userName = userName;
 		this.passWord = passWord;
 
-		initStore();
-		createFoldersListen(folders);
-		heartWork();
+		try {
+			initStore();
+			createFoldersListen(folders);
+			heartWork();
+		} catch (Exception e) {
+			System.out.println("监听邮箱失败");
+		}
 	}
 
 	// 初始化session store idleManager folderObjects
-	public void initStore() {
+	public void initStore() throws Exception {
 		String protocol = "imap";// 使用的协议
 
 		// Properties是一个属性对象，用来创建Session对象
@@ -67,73 +69,59 @@ public abstract class Mail implements MailInterface {
 		// session = Session.getDefaultInstance(props);
 		session = Session.getInstance(props);
 
-		try {
-			store = session.getStore(protocol);
-			store.connect(userName, passWord);
-			idleManager = new IdleManager(session, es);
-			folderObjects = new ArrayList<IMAPFolder>();
-		} catch (NoSuchProviderException e) {
-			e.printStackTrace();
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		store = session.getStore(protocol);
+		store.connect(userName, passWord);
+		idleManager = new IdleManager(session, es);
+		folderObjects = new ArrayList<IMAPFolder>();
 
 	};
 
 	public abstract Properties getProperties();
 
+	public abstract String getMailName();
+
 	// 创建监听
-	public void createFoldersListen(List<String> folders) {
+	public void createFoldersListen(List<String> folders) throws Exception {
 
 		for (String folderName : folders) {
-			try {
-				IMAPFolder temp = (IMAPFolder) store.getFolder(folderName);
-				temp.open(Folder.READ_ONLY);// 在这一步，收件箱所有邮件将被下载到本地
+			IMAPFolder temp = (IMAPFolder) store.getFolder(folderName);
+			temp.open(Folder.READ_ONLY);// 在这一步，收件箱所有邮件将被下载到本地
 
-				System.out.println(folderName);
-				// Message message = folder.getMessage(size);//取得最新的那个邮件
-				System.out.println("Size:" + temp.getMessageCount());
-				System.out.println("unread:" + temp.getUnreadMessageCount());
-				System.out.println("new:" + temp.getNewMessageCount());
-				System.out.println();
+			System.out.println(folderName);
+			// Message message = folder.getMessage(size);//取得最新的那个邮件
+			System.out.println("Size:" + temp.getMessageCount());
+			System.out.println("unread:" + temp.getUnreadMessageCount());
+			System.out.println("new:" + temp.getNewMessageCount());
+			System.out.println();
 
-				temp.addMessageCountListener(new MessageCountAdapter() {
+			temp.addMessageCountListener(new MessageCountAdapter() {
 
-					@Override
-					public void messagesAdded(MessageCountEvent e) {
-						super.messagesAdded(e);
+				@Override
+				public void messagesAdded(MessageCountEvent e) {
+					super.messagesAdded(e);
 
-						IMAPFolder folder = (IMAPFolder) e.getSource();
-						Message[] msgs = e.getMessages();
-						for (int i = 0; i < msgs.length; i++) {
-							try {
-								handler.setModelText("有新邮件！标题：" + msgs[i].getSubject(), 0);
-								System.out.println("新邮件主题" + msgs[i].getSubject());
-							} catch (MessagingException e1) {
-								e1.printStackTrace();
-							}
-						}
+					IMAPFolder folder = (IMAPFolder) e.getSource();
+					Message[] msgs = e.getMessages();
+					for (int i = 0; i < msgs.length; i++) {
 						try {
-							idleManager.watch(folder);
+							handler.setModelText(getMailName() + "有新邮件！标题：" + msgs[i].getSubject(), 0);
+							System.out.println("新邮件主题" + msgs[i].getSubject());
 						} catch (MessagingException e1) {
 							e1.printStackTrace();
 						}
-
+					}
+					try {
+						idleManager.watch(folder);
+					} catch (MessagingException e1) {
+						e1.printStackTrace();
 					}
 
-				});
-				idleManager.watch(temp);
-				folderObjects.add(temp);
+				}
 
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
+			});
+			idleManager.watch(temp);
+			folderObjects.add(temp);
 		}
-
 	}
 
 	/**

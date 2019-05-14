@@ -20,7 +20,7 @@ public class ExQQMail extends Mail {
 
 	@Override
 	public Properties getProperties() {
-		
+
 		String host = "imap.exmail.qq.com";// QQ企业邮箱的imap服务器
 		int port = 993;// 端口
 
@@ -34,4 +34,8 @@ public class ExQQMail extends Mail {
 		return props;
 	}
 
+	@Override
+	public String getMailName() {
+		return "腾讯企业邮箱";
+	}
 }

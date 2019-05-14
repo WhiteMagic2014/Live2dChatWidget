@@ -32,4 +32,9 @@ public class SinaMail extends Mail {
 		return props;
 	
 	}
+	
+	@Override
+	public String getMailName() {
+		return "新浪邮箱";
+	}
 }

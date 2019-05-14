@@ -32,5 +32,10 @@ public class QQMailPro extends Mail {
 
 		return props;
 	}
+	
+	@Override
+	public String getMailName() {
+		return "QQ邮箱";
+	}
 
 }

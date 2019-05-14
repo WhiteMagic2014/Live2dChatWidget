@@ -32,4 +32,9 @@ public class Wy163Mail extends Mail {
 
 		return props;
 	}
+	
+	@Override
+	public String getMailName() {
+		return "网易163邮箱";
+	}
 }
