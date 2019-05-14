@@ -53,6 +53,7 @@ public abstract class Mail implements MailInterface {
 			createFoldersListen(folders);
 			heartWork();
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println("监听邮箱失败");
 		}
 	}
