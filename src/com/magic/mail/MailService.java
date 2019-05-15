@@ -2,8 +2,6 @@ package com.magic.mail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.magic.ApiService;
 
@@ -24,20 +22,19 @@ public class MailService {
 	 */
 	public static final String WY163 = "wy163";
 	
+	/**
+	 * sina
+	 */
 	public static final String SINA = "sina";
 	
 	
 	
-
-	// 监听邮箱线程池
-	private ExecutorService es;
 	// 负责某一个邮箱的监听实例
 	private List<MailInterface> mailHandlers;
 	// api代理类
 	private ApiService handler = null;
 
 	public MailService(ApiService handler) {
-		es = Executors.newCachedThreadPool();
 		mailHandlers = new ArrayList<MailInterface>();
 		this.handler = handler;
 	}
@@ -57,23 +54,23 @@ public class MailService {
 
 		switch (type) {
 		case QQ:
-			MailInterface qqMail = new QQMailPro(handler, es, userName, passWord, folders);
+			MailInterface qqMail = new QQMailPro(handler, userName, passWord, folders);
 			mailHandlers.add(qqMail);
 			break;
 
 		case QQEX:
-			MailInterface qqexMail = new ExQQMail(handler, es, userName, passWord, folders);
+			MailInterface qqexMail = new ExQQMail(handler, userName, passWord, folders);
 			mailHandlers.add(qqexMail);
 			break;
 			
 			
 		case WY163:
-			MailInterface wy163Mail = new Wy163Mail(handler, es, userName, passWord, folders);
+			MailInterface wy163Mail = new Wy163Mail(handler, userName, passWord, folders);
 			mailHandlers.add(wy163Mail);
 			break;
 			
 		case SINA:
-			MailInterface sinaMail = new SinaMail(handler, es, userName, passWord, folders);
+			MailInterface sinaMail = new SinaMail(handler, userName, passWord, folders);
 			mailHandlers.add(sinaMail);
 			break;
 			
@@ -84,11 +81,10 @@ public class MailService {
 	}
 
 	/**
-	 * 关闭线程池
+	 * 关闭 所有mail的 监听 文件夹 store
 	 */
-	public void closeAll() {
+	public void close() {
 		mailHandlers.forEach(mh -> mh.close());
-		es.shutdown();
 	}
 
 }

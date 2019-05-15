@@ -14,6 +14,7 @@ import javax.mail.event.MessageCountAdapter;
 import javax.mail.event.MessageCountEvent;
 
 import com.magic.ApiService;
+import com.magic.SingleThreadPool;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IdleManager;
@@ -41,9 +42,9 @@ public abstract class Mail implements MailInterface {
 	protected IdleManager idleManager;
 	protected List<IMAPFolder> folderObjects;
 
-	public Mail(ApiService handler, ExecutorService es, String userName, String passWord, List<String> folders) {
+	public Mail(ApiService handler, String userName, String passWord, List<String> folders) {
 		this.handler = handler;
-		this.es = es;
+		this.es = SingleThreadPool.getInstance().threadPool();
 
 		this.userName = userName;
 		this.passWord = passWord;
@@ -105,7 +106,7 @@ public abstract class Mail implements MailInterface {
 					Message[] msgs = e.getMessages();
 					for (int i = 0; i < msgs.length; i++) {
 						try {
-							handler.setModelText(getMailName() + "有新邮件！标题：" + msgs[i].getSubject(), 0);
+							handler.setModelTextWithHoldTime(getMailName() + "有新邮件！标题：" + msgs[i].getSubject(), 0, 10);
 							System.out.println("新邮件主题" + msgs[i].getSubject());
 						} catch (MessagingException e1) {
 							e1.printStackTrace();

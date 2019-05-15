@@ -3,8 +3,7 @@ package com.magic;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -20,7 +19,6 @@ import com.alibaba.fastjson.JSONObject;
 public class MagicWebSocketClient extends WebSocketClient {
 
 	ApiService handle = null;
-	Timer timer = null;//心跳timer
 
 	public MagicWebSocketClient(String serverUri, ApiService handler) throws URISyntaxException {
 		super(new URI(serverUri));
@@ -29,15 +27,12 @@ public class MagicWebSocketClient extends WebSocketClient {
 
 	@Override
 	public void onClose(int arg0, String arg1, boolean arg2) {
+		// 是否由服务器关闭连接 如果是的话 就重连
 		if (arg2) {
 			reconnect();
 			System.out.println("断线重连..");
 		} else {
-			// 结束心跳
-			if (timer != null) {
-				timer.cancel();
-			}
-			System.out.println("关闭...");
+			System.out.println("ws onClose");
 		}
 	}
 
@@ -70,13 +65,14 @@ public class MagicWebSocketClient extends WebSocketClient {
 	 * 开始发送心跳
 	 */
 	public void startHeart() {
-		timer = new Timer();
-		timer.schedule(new TimerTask() {
+
+		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-				handle.setModelText("一颗心扑通扑通的狂跳~", 0);// 默认当第一个接受心跳
+				handle.setModelText("一颗心扑通扑通的狂跳~", 0);// 默认让第一个接受心跳
 			}
-		}, 0, 20 * 60 * 1000);// 这个是毫秒 20分钟一次心跳包
+		}, 0, 20, TimeUnit.MINUTES);// 20分钟一次心跳包
+
 	}
 
 }

@@ -1,5 +1,6 @@
 package com.magic;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +18,13 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.magic.mail.MailService;
 
 public class ApiService {
 
 	MagicWebSocketClient wsClient = null;
+
+	MailService mailService = null;
 
 	boolean WSFlag = false;
 
@@ -28,8 +33,11 @@ public class ApiService {
 			wsClient = new MagicWebSocketClient("ws://127.0.0.1:" + port + "/api", this);
 			wsClient.connect();
 		} catch (Exception e) {
+			System.out.println("ws连接失败");
 			e.printStackTrace();
 		}
+
+		mailService = new MailService(this);
 	}
 
 	/*
@@ -49,12 +57,45 @@ public class ApiService {
 	}
 
 	/**
-	 * 关闭ws
+	 * 关闭插件 所有需要关闭的统一在这里关
 	 */
-	public void closeClient() {
-		if (wsClient != null) {
-			wsClient.close();
-		}
+	public void totalClose() {
+		setModelTextDelay("插件关闭 感谢使用", 0);
+
+		// 延迟0.5秒关闭 这是唯一一个 new thread了
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.out.println("停止线程中的任务");// 窗体抖动 ws心跳 延迟发言
+				SingleThreadPool.getInstance().close();
+
+				System.out.println("关闭mail相关监听");
+				mailService.close();
+
+				System.out.println("关闭websocket连接");
+				if (wsClient != null) {
+					wsClient.close();
+				}
+				System.exit(0);
+			}
+		}).start();
+	}
+
+	/**
+	 * 做一个代理 把mailService封装在里面
+	 * 
+	 * @param type
+	 * @param userName
+	 * @param passWord
+	 * @param folders
+	 */
+	public void addMailListener(String type, String userName, String passWord, List<String> folders) {
+		mailService.addMailListener(type, userName, passWord, folders);
 	}
 
 	/**
@@ -64,6 +105,18 @@ public class ApiService {
 	 * @param modelId
 	 */
 	public void setModelText(String str, int modelId) {
+		setModelTextWithHoldTime(str, modelId, 5);
+	}
+
+	/**
+	 * 让指定model说话 文字持续保留一段时间
+	 * 
+	 * @param str
+	 * @param modelId
+	 * @param holdTime
+	 *            秒
+	 */
+	public void setModelTextWithHoldTime(String str, int modelId, int holdTime) {
 
 		JSONObject textjson = new JSONObject();
 
@@ -72,12 +125,12 @@ public class ApiService {
 		JSONObject data = new JSONObject();
 		data.put("id", modelId);
 		data.put("text", str);
-		data.put("duration", 5000);
+		data.put("duration", holdTime * 1000);
 		textjson.put("data", data);
 
 		wsClient.send(textjson.toJSONString());
 	}
-	
+
 	/**
 	 * 模型延时说话 /主要用于菜单选项之后 ，点击菜单后气泡框立刻消失 导致马上恢复的语言无法显示，所以延时0.1秒发送
 	 * 
@@ -85,7 +138,7 @@ public class ApiService {
 	 * @param modelId
 	 */
 	public void setModelTextDelay(String str, int modelId) {
-		new Thread(new Runnable() {
+		SingleThreadPool.getInstance().threadPool().execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -95,7 +148,7 @@ public class ApiService {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		});
 	}
 
 	/**
@@ -117,13 +170,13 @@ public class ApiService {
 		menu.add("打开maven仓库");
 		menu.add("打开工作环境");
 		menu.add("随机双色球");
+		menu.add("看看本项目");
+		menu.add("关闭插件");
 
 		data.put("choices", menu);
 		textjson.put("data", data);
 		wsClient.send(textjson.toJSONString());
 	}
-
-
 
 	/**
 	 * 
@@ -149,7 +202,28 @@ public class ApiService {
 				String result = createLottery();
 				setModelTextDelay(result, 0);
 				break;
+
+			case 3:
+				URI uri= URI.create("https://github.com/WhiteMagic2014/Live2dChatWidget");
+				Desktop dp = Desktop.getDesktop();
+				if (dp.isSupported(Desktop.Action.BROWSE)) {
+					try {
+						dp.browse(uri);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}else {
+					setModelTextDelay("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
+				}
 				
+				break;
+				
+				
+			case 4:
+				this.totalClose();
+				break;
+
 			default:
 				setModelTextDelay("=￣ω￣=", 0);
 				break;

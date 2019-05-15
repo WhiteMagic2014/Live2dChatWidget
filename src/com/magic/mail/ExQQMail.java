@@ -2,7 +2,6 @@ package com.magic.mail;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 
 import com.magic.ApiService;
 
@@ -14,8 +13,8 @@ import com.magic.ApiService;
  */
 public class ExQQMail extends Mail {
 
-	public ExQQMail(ApiService handler, ExecutorService es, String userName, String passWord, List<String> folders) {
-		super(handler, es, userName, passWord, folders);
+	public ExQQMail(ApiService handler, String userName, String passWord, List<String> folders) {
+		super(handler, userName, passWord, folders);
 	}
 
 	@Override

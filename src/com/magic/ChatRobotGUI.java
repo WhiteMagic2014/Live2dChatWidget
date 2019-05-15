@@ -9,8 +9,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -19,14 +17,12 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 
-import com.magic.mail.MailService;
 import com.sun.awt.AWTUtilities;
 
 public class ChatRobotGUI implements ActionListener, Runnable {
 
-	MailService mailService;
 	ApiService apiService;
-	
+
 	JFrame fatherFrame, switchFrame;
 	JPanel lablePanel, inputPanel, linkPanel;
 	JTextField inputField;
@@ -45,8 +41,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 
 	Boolean hideFlag = true;
 
-	public ChatRobotGUI(ApiService apiService,MailService mailService) {
-		this.mailService = mailService;
+	public ChatRobotGUI(ApiService apiService) {
 		this.apiService = apiService;
 		// 控制开关Frame
 		switchFrame = new JFrame();
@@ -67,6 +62,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 		switchFrame.setBackground(bg_control); // 将背景色设置为空
 		switchFrame.setAlwaysOnTop(true);// 窗体置顶
 		switchFrame.setVisible(true);
+		switchFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// 本体父窗体Frame
 		fatherFrame = new JFrame();
@@ -104,7 +100,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 		linkPanel.setPreferredSize(null);
 		linkPanel.setBackground(bg);
 		linkPanel.setVisible(true);
-		
+
 		JButton menuBtn = new JButton();
 		menuBtn.setForeground(Color.white);
 		menuBtn.setText("<html>菜<br>单</html>");
@@ -117,14 +113,10 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 		});
 		menuBtn.setBorderPainted(false);
 		menuBtn.setBorder(null);
-		
-		
+
 		linkPanel.add(menuBtn);
-		fatherFrame.add(linkPanel,BorderLayout.EAST);
-		
-		
-		
-		
+		fatherFrame.add(linkPanel, BorderLayout.EAST);
+
 		// 获取开始平移时的点击坐标
 		fatherFrame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -157,21 +149,12 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 		fatherFrame.setBackground(bg); // 将背景色设置为空
 
 		fatherFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		fatherFrame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				mailService.closeAll();//先关mail
-				apiService.closeClient();//再关service
-				super.windowClosed(e);
-			}
-		});
 
 		fatherFrame.setSize(400, 200);
 		fatherFrame.setBackground(bg);
 		xnow = (int) fatherFrame.getLocation().getX();
 		ynow = (int) fatherFrame.getLocation().getY();
 		fatherFrame.setVisible(true);
-
 
 	}
 
@@ -187,6 +170,8 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 
 			if (input.contains("$菜单")) {
 				apiService.openMenu(0);
+			} else if (input.contains("$exit")) {
+				apiService.totalClose();
 			} else if (input.startsWith("$shell:")) {
 				// 调用shell
 				origin = apiService.shShell(input.replace("$shell:", ""));

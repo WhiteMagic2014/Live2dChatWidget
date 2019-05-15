@@ -20,23 +20,20 @@ public class Simulator {
 		qqFolders.add("inbox");
 		qqFolders.add("其他文件夹/apple");
 
-		// 启动 邮件服务
-		MailService mailHelper = new MailService(apiService);
-
 		// qq邮箱
-		mailHelper.addMailListener(MailService.QQ, "xxxx@qq.com", "授权码", qqFolders);
+		apiService.addMailListener(MailService.QQ, "xxxx@qq.com", "授权码", qqFolders);
 		// 企业qq邮箱
-		mailHelper.addMailListener(MailService.QQEX, "企业邮箱", "密码", defaultFolders);
-		// 网易163 这个有问题 不能实时监听
-		mailHelper.addMailListener(MailService.WY163, "xxxx@163.com", "授权码", defaultFolders);
-		// 新浪 这个有问题 不能实时监听
-		mailHelper.addMailListener(MailService.SINA, "xxxxx@sina.com", "账号密码", defaultFolders);
+		apiService.addMailListener(MailService.QQEX, "企业邮箱", "密码", defaultFolders);
+		// 网易163 服务器不支持idle监听 懒得写轮询 先放着吧
+		//	apiService.addMailListener(MailService.WY163, "xxxx@163.com", "授权码", defaultFolders);
+		// 新浪 服务器不支持idle监听
+		//	apiService.addMailListener(MailService.SINA, "xxxxx@sina.com", "账号密码", defaultFolders);
 
 		// 开始绘图
-		ChatRobotGUI gui = new ChatRobotGUI(apiService, mailHelper);
+		ChatRobotGUI gui = new ChatRobotGUI(apiService);
 
-		// 给窗口浮动开一个独立线程 不用和邮箱监听 在一个线程池里
-		new Thread(gui).start();
+		// 给窗口浮动开一个独立线程
+		SingleThreadPool.getInstance().threadPool().execute(gui);
 	}
 
 }

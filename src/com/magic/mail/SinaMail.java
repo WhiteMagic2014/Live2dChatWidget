@@ -2,19 +2,19 @@ package com.magic.mail;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 
 import com.magic.ApiService;
 
 /**
- * 新浪邮箱监听 貌似不能监听有点问题
+ * 新浪邮箱监听 服务器不支持idle监听 懒得写轮询 先放着吧
+ * 
  * @author chenhaoyu
  *
  */
 public class SinaMail extends Mail {
 
-	public SinaMail(ApiService handler, ExecutorService es, String userName, String passWord, List<String> folders) {
-		super(handler, es, userName, passWord, folders);
+	public SinaMail(ApiService handler, String userName, String passWord, List<String> folders) {
+		super(handler, userName, passWord, folders);
 	}
 
 	@Override
@@ -30,9 +30,9 @@ public class SinaMail extends Mail {
 		props.put("mail.imap.usesocketchannels", "true");
 
 		return props;
-	
+
 	}
-	
+
 	@Override
 	public String getMailName() {
 		return "新浪邮箱";
