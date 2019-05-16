@@ -25,10 +25,13 @@ public class ApiService {
 
 	boolean WSFlag = false;
 
+	List<OptionMenu> optionMenuList = null;
+
 	public ApiService(String port) {
 		try {
 			wsClient = new MagicWebSocketClient("ws://127.0.0.1:" + port + "/api", this);
 			wsClient.connect();
+			initMenu();
 		} catch (Exception e) {
 			System.out.println("ws连接失败");
 			e.printStackTrace();
@@ -117,6 +120,93 @@ public class ApiService {
 		wsClient.send(textjson.toJSONString());
 	}
 
+	/**
+	 * 初始化菜单
+	 */
+	public void initMenu() {
+		optionMenuList = new ArrayList<>();
+		optionMenuList.add(new OptionMenu() {
+			@Override
+			public String menuName() {
+				return "打开maven仓库";
+			}
+
+			@Override
+			public void execute() {
+				shShell("open /Users/chenhaoyu/.m2/repository/");
+			}
+		});
+
+		optionMenuList.add(new OptionMenu() {
+			@Override
+			public String menuName() {
+				return "打开工作环境";
+			}
+
+			@Override
+			public void execute() {
+				shShell("open /Users/chenhaoyu/Documents/workspace-sts-3.9.5.RELEASE/");
+			}
+		});
+		optionMenuList.add(new OptionMenu() {
+			@Override
+			public String menuName() {
+				return "随机双色球";
+			}
+
+			@Override
+			public void execute() {
+				String result = createLottery();
+				setModelText(result, 0);
+			}
+		});
+		optionMenuList.add(new OptionMenu() {
+
+			@Override
+			public String menuName() {
+				return "番剧信息";
+			}
+
+			@Override
+			public void execute() {
+				String bangumi = getBangumi();
+				setModelText(bangumi, 0);
+			}
+		});
+		optionMenuList.add(new OptionMenu() {
+			@Override
+			public String menuName() {
+				return "看看本项目";
+			}
+
+			@Override
+			public void execute() {
+				URI uri = URI.create("https://github.com/WhiteMagic2014/Live2dChatWidget");
+				Desktop dp = Desktop.getDesktop();
+				if (dp.isSupported(Desktop.Action.BROWSE)) {
+					try {
+						dp.browse(uri);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					setModelText("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
+				}
+			}
+		});
+		optionMenuList.add(new OptionMenu() {
+
+			@Override
+			public String menuName() {
+				return "关闭插件";
+			}
+
+			@Override
+			public void execute() {
+				totalClose();
+			}
+		});
+	}
 
 	/**
 	 * 让指定model打开菜单
@@ -133,74 +223,20 @@ public class ApiService {
 		data.put("text", "需要我帮忙吗？");
 		data.put("duration", 5000);
 
-		JSONArray menu = new JSONArray();
-		menu.add("打开maven仓库");
-		menu.add("打开工作环境");
-		menu.add("随机双色球");
-		menu.add("番剧信息");
-		menu.add("看看本项目");
-		menu.add("关闭插件");
-
-		data.put("choices", menu);
+		data.put("choices", optionMenuList.stream().map(menu -> menu.menuName()).collect(Collectors.toList()));
 		textjson.put("data", data);
 		wsClient.send(textjson.toJSONString());
 	}
 
 	/**
-	 * 
-	 * @param resultObj
+	 * 选项回调处理
 	 */
 	public void processCallback(JSONObject resultObj) {
-
 		System.out.println(resultObj);
-
 		// 选项回调
 		if (resultObj.getIntValue("msg") == 11000) {
-			switch (resultObj.getIntValue("data")) {
-
-			case 0:
-				shShell("open /Users/chenhaoyu/.m2/repository/");
-				break;
-
-			case 1:
-				shShell("open /Users/chenhaoyu/Documents/workspace-sts-3.9.5.RELEASE/");
-				break;
-
-			case 2:
-				String result = createLottery();
-				setModelText(result, 0);
-				break;
-
-			case 3:
-				String bangumi = getBangumi();
-				setModelText(bangumi, 0);
-				break;
-
-			case 4:
-				URI uri = URI.create("https://github.com/WhiteMagic2014/Live2dChatWidget");
-				Desktop dp = Desktop.getDesktop();
-				if (dp.isSupported(Desktop.Action.BROWSE)) {
-					try {
-						dp.browse(uri);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} else {
-					setModelText("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
-				}
-
-				break;
-
-			case 5:
-				this.totalClose();
-				break;
-
-			default:
-				setModelText("=￣ω￣=", 0);
-				break;
-			}
+			optionMenuList.get(resultObj.getIntValue("data")).execute();
 		}
-
 	}
 
 	/**
@@ -239,8 +275,6 @@ public class ApiService {
 		Random random = new Random();
 		return (random.nextInt(16) + 1);
 	}
-
-	
 
 	/**
 	 * 解析返回的数据 json unicode等
