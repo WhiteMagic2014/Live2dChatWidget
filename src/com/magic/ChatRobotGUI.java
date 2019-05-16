@@ -170,8 +170,10 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 
 			if (input.contains("$菜单")) {
 				apiService.openMenu(0);
+				return;
 			} else if (input.contains("$exit")) {
 				apiService.totalClose();
+				return;
 			} else if (input.startsWith("$shell:")) {
 				// 调用shell
 				origin = apiService.shShell(input.replace("$shell:", ""));

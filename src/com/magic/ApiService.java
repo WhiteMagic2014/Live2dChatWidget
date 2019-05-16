@@ -57,30 +57,19 @@ public class ApiService {
 	 * 关闭插件 所有需要关闭的统一在这里关
 	 */
 	public void totalClose() {
-		setModelTextDelay("插件关闭 感谢使用", 0);
+		setModelText("插件关闭 感谢使用", 0);
 
-		// 延迟0.5秒关闭 这是唯一一个 new thread了
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				System.out.println("停止线程中的任务");// 窗体抖动 ws心跳 延迟发言
-				SingleThreadPool.getInstance().close();
+		System.out.println("停止线程中的任务");// 窗体抖动 ws心跳 延迟发言
+		SingleThreadPool.getInstance().close();
 
-				System.out.println("关闭mail相关监听");
-				mailService.close();
+		System.out.println("关闭mail相关监听");
+		mailService.close();
 
-				System.out.println("关闭websocket连接");
-				if (wsClient != null) {
-					wsClient.close();
-				}
-				System.exit(0);
-			}
-		}).start();
+		System.out.println("关闭websocket连接");
+		if (wsClient != null) {
+			wsClient.close();
+		}
+		System.exit(0);
 	}
 
 	/**
@@ -128,31 +117,6 @@ public class ApiService {
 		wsClient.send(textjson.toJSONString());
 	}
 
-	/**
-	 * 模型延时说话 /主要用于菜单选项之后 ，点击菜单后气泡框立刻消失 导致马上恢复的语言无法显示，所以延时0.1秒发送
-	 * 
-	 * @param str
-	 * @param modelId
-	 */
-	public void setModelTextDelay(String str, int modelId) {
-		setModelTextDelayWithHoldTime(str, modelId, 5);
-	}
-	
-	public void setModelTextDelayWithHoldTime (String str, int modelId,int holdTime) {
-		SingleThreadPool.getInstance().threadPool().execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(100);
-					setModelTextWithHoldTime(str, modelId,holdTime);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-	
-	
 
 	/**
 	 * 让指定model打开菜单
@@ -204,12 +168,12 @@ public class ApiService {
 
 			case 2:
 				String result = createLottery();
-				setModelTextDelay(result, 0);
+				setModelText(result, 0);
 				break;
 
 			case 3:
 				String bangumi = getBangumi();
-				setModelTextDelay(bangumi, 0);
+				setModelText(bangumi, 0);
 				break;
 
 			case 4:
@@ -219,11 +183,10 @@ public class ApiService {
 					try {
 						dp.browse(uri);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				} else {
-					setModelTextDelay("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
+					setModelText("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
 				}
 
 				break;
@@ -233,7 +196,7 @@ public class ApiService {
 				break;
 
 			default:
-				setModelTextDelay("=￣ω￣=", 0);
+				setModelText("=￣ω￣=", 0);
 				break;
 			}
 		}
@@ -277,6 +240,8 @@ public class ApiService {
 		return (random.nextInt(16) + 1);
 	}
 
+	
+
 	/**
 	 * 解析返回的数据 json unicode等
 	 * 
@@ -284,7 +249,7 @@ public class ApiService {
 	 * @return
 	 */
 	public String analysisStr(String str) {
-		str = str.replace("[name]", "Master").replace("[cqname]", "我").replace("NULL", "=￣ω￣=");
+		str = str.replace("[name]", "{$username}").replace("[cqname]", "我").replace("NULL", "=￣ω￣=");
 		return str;
 	}
 
@@ -347,13 +312,13 @@ public class ApiService {
 	 */
 	public String getBangumi() {
 		String origin = HttpHelper.sendGet("https://bangumi.bilibili.com/web_api/timeline_global");
-		
+
 		JSONObject jsonRaw = JSONObject.parseObject(origin);
 
 		if (jsonRaw.getString("message").equals("success")) {
-			
+
 			StringBuilder sb = new StringBuilder();
-			
+
 			JSONArray dateArray = jsonRaw.getJSONArray("result");
 			List<JSONObject> dateList = JSONArray.parseArray(dateArray.toJSONString(), JSONObject.class);
 
@@ -365,20 +330,19 @@ public class ApiService {
 			String week = todayData.getString("day_of_week");
 
 			sb.append("今天是 " + today + " 星期" + week + ".\n更新的番剧有:\n");
-			
-//			System.out.println("更新的番剧有:");
+
+			// System.out.println("更新的番剧有:");
 			List<JSONObject> bangumiList = JSONArray.parseArray(todayData.getString("seasons"), JSONObject.class);
 
 			bangumiList.stream().forEach(t -> {
-				sb.append(t.getString("pub_time")+" "+t.getString("title") +" "+ t.getString("pub_index")+"\n");
+				sb.append(t.getString("pub_time") + " " + t.getString("title") + " " + t.getString("pub_index") + "\n");
 			});
 
 			return sb.toString();
 		} else {
 			return "获取信息失败_(:з」∠)_";
 		}
-		
+
 	}
 
-	
 }
