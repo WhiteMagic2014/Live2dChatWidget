@@ -3,14 +3,10 @@ package com.magic;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,6 +15,7 @@ import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.magic.mail.MailService;
+import com.magic.util.HttpHelper;
 
 public class ApiService {
 
@@ -138,18 +135,24 @@ public class ApiService {
 	 * @param modelId
 	 */
 	public void setModelTextDelay(String str, int modelId) {
+		setModelTextDelayWithHoldTime(str, modelId, 5);
+	}
+	
+	public void setModelTextDelayWithHoldTime (String str, int modelId,int holdTime) {
 		SingleThreadPool.getInstance().threadPool().execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					Thread.sleep(100);
-					setModelText(str, modelId);
+					setModelTextWithHoldTime(str, modelId,holdTime);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
 		});
 	}
+	
+	
 
 	/**
 	 * 让指定model打开菜单
@@ -170,6 +173,7 @@ public class ApiService {
 		menu.add("打开maven仓库");
 		menu.add("打开工作环境");
 		menu.add("随机双色球");
+		menu.add("番剧信息");
 		menu.add("看看本项目");
 		menu.add("关闭插件");
 
@@ -204,7 +208,12 @@ public class ApiService {
 				break;
 
 			case 3:
-				URI uri= URI.create("https://github.com/WhiteMagic2014/Live2dChatWidget");
+				String bangumi = getBangumi();
+				setModelTextDelay(bangumi, 0);
+				break;
+
+			case 4:
+				URI uri = URI.create("https://github.com/WhiteMagic2014/Live2dChatWidget");
 				Desktop dp = Desktop.getDesktop();
 				if (dp.isSupported(Desktop.Action.BROWSE)) {
 					try {
@@ -213,14 +222,13 @@ public class ApiService {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				}else {
+				} else {
 					setModelTextDelay("不支持呢...手动打开吧 https://github.com/WhiteMagic2014/Live2dChatWidget", 0);
 				}
-				
+
 				break;
-				
-				
-			case 4:
+
+			case 5:
 				this.totalClose();
 				break;
 
@@ -329,37 +337,48 @@ public class ApiService {
 	 * @return
 	 */
 	public String chat(String str) {
-		StringBuffer buffer = new StringBuffer();
-		URL url = null;
-		try {
-			url = new URL("http://i.itpk.cn/api.php?question=" + str);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		HttpURLConnection httpUrlConn = null;
-		try {
-			httpUrlConn = (HttpURLConnection) url.openConnection();
-			httpUrlConn.setDoOutput(false);
-			httpUrlConn.setDoInput(true);
-			httpUrlConn.setUseCaches(false);
-			httpUrlConn.setRequestMethod("GET");
-			httpUrlConn.connect();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try (InputStream inputStream = httpUrlConn.getInputStream();
-				InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "utf-8");
-				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);) {
-			String result = null;
-			while ((result = bufferedReader.readLine()) != null) {
-				buffer.append(result);
-			}
-		} catch (Exception e) {
-			return "被玩坏了_(:з」∠)_";
-		} finally {
-			httpUrlConn.disconnect();
-		}
-		return buffer.toString();
+		return HttpHelper.sendGet("http://i.itpk.cn/api.php?question=" + str);
 	}
 
+	/**
+	 * 番剧信息
+	 * 
+	 * @return
+	 */
+	public String getBangumi() {
+		String origin = HttpHelper.sendGet("https://bangumi.bilibili.com/web_api/timeline_global");
+		
+		JSONObject jsonRaw = JSONObject.parseObject(origin);
+
+		if (jsonRaw.getString("message").equals("success")) {
+			
+			StringBuilder sb = new StringBuilder();
+			
+			JSONArray dateArray = jsonRaw.getJSONArray("result");
+			List<JSONObject> dateList = JSONArray.parseArray(dateArray.toJSONString(), JSONObject.class);
+
+			JSONObject todayData = dateList.stream().filter(date -> date.getBoolean("is_today"))
+					.collect(Collectors.toList()).get(0);
+
+			String[] dateTemp = todayData.getString("date").split("-");
+			String today = dateTemp[0] + "月" + dateTemp[1] + "日";
+			String week = todayData.getString("day_of_week");
+
+			sb.append("今天是 " + today + " 星期" + week + ".\n更新的番剧有:\n");
+			
+//			System.out.println("更新的番剧有:");
+			List<JSONObject> bangumiList = JSONArray.parseArray(todayData.getString("seasons"), JSONObject.class);
+
+			bangumiList.stream().forEach(t -> {
+				sb.append(t.getString("pub_time")+" "+t.getString("title") +" "+ t.getString("pub_index")+"\n");
+			});
+
+			return sb.toString();
+		} else {
+			return "获取信息失败_(:з」∠)_";
+		}
+		
+	}
+
+	
 }

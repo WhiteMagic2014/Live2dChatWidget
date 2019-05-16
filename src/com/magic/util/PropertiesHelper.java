@@ -1,4 +1,4 @@
-package com.magic;
+package com.magic.util;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,6 +8,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+/**
+ * 想做配置文件的 但是没有 让我想想怎么做
+ * @author chenhaoyu
+ *
+ */
 public class PropertiesHelper {
 
 	private Properties properties;
