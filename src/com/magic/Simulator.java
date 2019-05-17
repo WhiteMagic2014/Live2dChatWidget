@@ -22,7 +22,7 @@ public class Simulator {
 		ApiService apiService = new ApiService("10086");// 预留了接上托盘软件的可能性
 
 		// 根据配置看是否开启邮箱监听
-		String enableMail = PropertiesHelper.getInstance().getValue("mail.enable");
+		String enableMail = PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_ENABLE);
 		if (StringUtils.isNotBlank(enableMail) && enableMail.equals("T")) {
 			// qq邮箱
 			if (StringUtils.isNotBlank(PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_ACC))) {
