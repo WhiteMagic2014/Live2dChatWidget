@@ -27,12 +27,12 @@ public class Simulator {
 			// qq邮箱
 			if (StringUtils.isNotBlank(PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_ACC))) {
 				String qqfold = PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_FOL);
-				List<String> fload = Arrays.asList(qqfold.split(",")).stream().map(s -> "其他文件夹/" + s)
+				List<String> fold = Arrays.asList(qqfold.split(",")).stream().filter(s->StringUtils.isNotBlank(s)).map(s -> "其他文件夹/" + s)
 						.collect(Collectors.toList());
-				fload.add("inbox");
+				fold.add("inbox");
 				apiService.addMailListener(MailService.QQ,
 						PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_ACC),
-						PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_KEY), fload);
+						PropertiesHelper.getInstance().getValue(PropertiesHelper.MAIL_QQ_KEY), fold);
 			}
 
 //			List<String> defaultFolders = new ArrayList<String>();
