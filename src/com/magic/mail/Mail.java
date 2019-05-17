@@ -55,7 +55,7 @@ public abstract class Mail implements MailInterface {
 			heartWork();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("监听邮箱失败");
+			handler.setModelText("监听"+getMailName()+"失败", 0);
 		}
 	}
 
