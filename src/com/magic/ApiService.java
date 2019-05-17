@@ -125,29 +125,29 @@ public class ApiService {
 	 */
 	public void initMenu() {
 		optionMenuList = new ArrayList<>();
-		optionMenuList.add(new OptionMenu() {
-			@Override
-			public String menuName() {
-				return "打开maven仓库";
-			}
-
-			@Override
-			public void execute() {
-				shShell("open /Users/chenhaoyu/.m2/repository/");
-			}
-		});
-
-		optionMenuList.add(new OptionMenu() {
-			@Override
-			public String menuName() {
-				return "打开工作环境";
-			}
-
-			@Override
-			public void execute() {
-				shShell("open /Users/chenhaoyu/Documents/workspace-sts-3.9.5.RELEASE/");
-			}
-		});
+//		optionMenuList.add(new OptionMenu() {
+//			@Override
+//			public String menuName() {
+//				return "打开maven仓库";
+//			}
+//
+//			@Override
+//			public void execute() {
+//				shShell("open /Users/chenhaoyu/.m2/repository/");
+//			}
+//		});
+//
+//		optionMenuList.add(new OptionMenu() {
+//			@Override
+//			public String menuName() {
+//				return "打开工作环境";
+//			}
+//
+//			@Override
+//			public void execute() {
+//				shShell("open /Users/chenhaoyu/Documents/workspace-sts-3.9.5.RELEASE/");
+//			}
+//		});
 		optionMenuList.add(new OptionMenu() {
 			@Override
 			public String menuName() {
