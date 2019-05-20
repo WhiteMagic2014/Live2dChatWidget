@@ -62,7 +62,7 @@ public class ApiService {
 	public void totalClose() {
 		setModelText("插件关闭 感谢使用", 0);
 
-		System.out.println("停止线程中的任务");// 窗体抖动 ws心跳 延迟发言
+		System.out.println("停止线程中的任务");// 窗体抖动 ws心跳
 		SingleThreadPool.getInstance().close();
 
 		System.out.println("关闭mail相关监听");

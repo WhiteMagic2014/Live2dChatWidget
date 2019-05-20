@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -55,7 +56,7 @@ public abstract class Mail implements MailInterface {
 			heartWork();
 		} catch (Exception e) {
 			e.printStackTrace();
-			handler.setModelText("监听"+getMailName()+"失败", 0);
+			handler.setModelText("监听" + getMailName() + "失败", 0);
 		}
 	}
 
@@ -121,6 +122,7 @@ public abstract class Mail implements MailInterface {
 				}
 
 			});
+			
 			idleManager.watch(temp);
 			folderObjects.add(temp);
 		}
@@ -130,34 +132,54 @@ public abstract class Mail implements MailInterface {
 	 * 待定的心跳检测
 	 */
 	public void heartWork() {
-		es.execute(new Runnable() {
+		// es.execute(new Runnable() {
+		// @Override
+		// public void run() {
+		//
+		// while (true) {
+		//
+		// try {
+		// Thread.sleep(9 * 60 * 1000);// 9分钟一次与邮件服务器的心跳 （gmail 超时时间比较短）
+		//
+		// for (IMAPFolder folder : folderObjects) {
+		// folder.doCommand(new IMAPFolder.ProtocolCommand() {
+		// @Override
+		// public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
+		// arg0.simpleCommand("NOOP", null);
+		// return null;
+		// }
+		// });
+		// }
+		//
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		//
+		// }
+		//
+		// }
+		// });
+
+		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-
-				while (true) {
-
-					try {
-						Thread.sleep(9 * 60 * 1000);// 9分钟一次与邮件服务器的心跳 （gmail
-													// 超时时间比较短）
-
-						for (IMAPFolder folder : folderObjects) {
-							folder.doCommand(new IMAPFolder.ProtocolCommand() {
-								@Override
-								public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
-									arg0.simpleCommand("NOOP", null);
-									return null;
-								}
-							});
-						}
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-
-				}
-
+				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
+//				try {
+//					for (IMAPFolder imapFolder : folderObjects) {
+//						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+//							@Override
+//							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
+//								arg0.simpleCommand("NOOP", null);
+//								return null;
+//							}
+//						});
+//					}
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
 			}
-		});
+		}, 5, 5, TimeUnit.MINUTES);
+
 	}
 
 	// 关闭 监听 文件夹 store
