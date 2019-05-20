@@ -24,6 +24,11 @@ public class PropertiesHelper {
 	public static final String MAIL_QQ_FOL = "mail.qq.folders";
 	
 	
+	public static final String MAIL_QQEX_ACC = "mail.qqex.account";
+	public static final String MAIL_QQEX_KEY = "mail.qqex.key";
+	public static final String MAIL_QQEX_FOL = "mail.qqex.folders";
+	
+	
 	private Properties properties = new Properties();
 
 	String osName = System.getProperty("os.name");

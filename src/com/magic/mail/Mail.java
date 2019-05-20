@@ -74,6 +74,8 @@ public abstract class Mail implements MailInterface {
 
 		store = session.getStore(protocol);
 		store.connect(userName, passWord);
+		
+		
 		idleManager = new IdleManager(session, es);
 		folderObjects = new ArrayList<IMAPFolder>();
 
@@ -104,6 +106,7 @@ public abstract class Mail implements MailInterface {
 					super.messagesAdded(e);
 
 					IMAPFolder folder = (IMAPFolder) e.getSource();
+					
 					Message[] msgs = e.getMessages();
 					for (int i = 0; i < msgs.length; i++) {
 						try {
@@ -115,7 +118,7 @@ public abstract class Mail implements MailInterface {
 					}
 					try {
 						idleManager.watch(folder);
-					} catch (MessagingException e1) {
+					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
 
@@ -128,57 +131,33 @@ public abstract class Mail implements MailInterface {
 		}
 	}
 
+	
+	
 	/**
 	 * 待定的心跳检测
 	 */
 	public void heartWork() {
-		// es.execute(new Runnable() {
-		// @Override
-		// public void run() {
-		//
-		// while (true) {
-		//
-		// try {
-		// Thread.sleep(9 * 60 * 1000);// 9分钟一次与邮件服务器的心跳 （gmail 超时时间比较短）
-		//
-		// for (IMAPFolder folder : folderObjects) {
-		// folder.doCommand(new IMAPFolder.ProtocolCommand() {
-		// @Override
-		// public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
-		// arg0.simpleCommand("NOOP", null);
-		// return null;
-		// }
-		// });
-		// }
-		//
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		//
-		// }
-		//
-		// }
-		// });
-
+		
 		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
 				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
-//				try {
-//					for (IMAPFolder imapFolder : folderObjects) {
-//						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-//							@Override
-//							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
-//								arg0.simpleCommand("NOOP", null);
-//								return null;
-//							}
-//						});
-//					}
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
+				try {
+					for (IMAPFolder imapFolder : folderObjects) {
+						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+							@Override
+							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
+								arg0.simpleCommand("NOOP", null);
+								return null;
+							}
+						});
+						idleManager.watch(imapFolder);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
-		}, 5, 5, TimeUnit.MINUTES);
+		}, 9, 9, TimeUnit.MINUTES);
 
 	}
 

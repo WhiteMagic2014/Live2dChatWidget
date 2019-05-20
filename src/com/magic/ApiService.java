@@ -235,7 +235,12 @@ public class ApiService {
 		System.out.println(resultObj);
 		// 选项回调
 		if (resultObj.getIntValue("msg") == 11000) {
-			optionMenuList.get(resultObj.getIntValue("data")).execute();
+			int menuID = resultObj.getIntValue("data");
+			if (menuID < 0) {
+				setModelText("✧(≖ ◡ ≖✿)嘿嘿", 0);
+			}else {
+				optionMenuList.get(menuID).execute();
+			}
 		}
 	}
 

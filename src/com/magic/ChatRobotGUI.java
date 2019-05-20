@@ -21,6 +21,8 @@ import com.sun.awt.AWTUtilities;
 
 public class ChatRobotGUI implements ActionListener, Runnable {
 
+	public String version = "1.0.1";
+	
 	ApiService apiService;
 
 	JFrame fatherFrame, switchFrame;
@@ -77,7 +79,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 		label.setFont(new Font("黑体", Font.PLAIN, 18));
 		label.setBackground(bg);
 		label.setVisible(true);
-		String notice = "<html>本插件版本1.0<br/>AI由茉莉机器人提供<br/>仅供娱乐学习,严禁商业使用<br/>by Magic2014<br/>感谢Live2DViewerEX作者</html>";
+		String notice = "<html>版本:"+version+"<br/>AI由茉莉机器人提供<br/>仅供娱乐学习,严禁商业使用<br/>by Magic2014<br/>感谢Live2DViewerEX作者</html>";
 		label.setText(notice);
 		lablePanel.add(label);
 		fatherFrame.add(lablePanel, BorderLayout.CENTER);
