@@ -60,7 +60,7 @@ public class ApiService {
 	 * 关闭插件 所有需要关闭的统一在这里关
 	 */
 	public void totalClose() {
-		setModelText("插件关闭 感谢使用", 0);
+		setModelText("插件关闭 感谢使用 ค(≖ ◡ ≖) 白白", 0);
 
 		System.out.println("停止线程中的任务");// 窗体抖动 ws心跳
 		SingleThreadPool.getInstance().close();

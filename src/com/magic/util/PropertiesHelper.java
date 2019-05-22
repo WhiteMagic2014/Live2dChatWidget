@@ -88,9 +88,14 @@ public class PropertiesHelper {
 	public void createProperties(){
 		System.out.println("创建配置文件");
 		properties.setProperty(MAIL_ENABLE, "F");
+		
 		properties.setProperty(MAIL_QQ_ACC, "");
 		properties.setProperty(MAIL_QQ_KEY, "");
 		properties.setProperty(MAIL_QQ_FOL, "");
+		
+		properties.setProperty(MAIL_QQEX_ACC, "");
+		properties.setProperty(MAIL_QQEX_KEY, "");
+		// properties.setProperty(MAIL_QQEX_FOL, "");
 		
 		try (FileOutputStream fous = new FileOutputStream(new File(properFilePath))) {
 			properties.store(fous, null);

@@ -18,8 +18,8 @@ public class SingleThreadPool {
 
 	private SingleThreadPool() {
 		System.out.println("构造线程池");
-		es = Executors.newCachedThreadPool();
-		ses = Executors.newScheduledThreadPool(5);// 定长周期线程池 分配5个线程吧
+		es = Executors.newCachedThreadPool();//普通线程池 : gui的窗体抖动 ; idleManager （一个邮箱占用一个线程）  
+		ses = Executors.newScheduledThreadPool(10);// 定长周期线程池 : websocket的心跳 ; 邮箱的心跳（一个邮箱占用一个线程）
 	}
 
 	public static final SingleThreadPool getInstance() {

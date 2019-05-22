@@ -3,14 +3,16 @@ package com.magic.mail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.Folder;
+import javax.mail.FolderClosedException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.event.ConnectionEvent;
+import javax.mail.event.ConnectionListener;
 import javax.mail.event.MessageCountAdapter;
 import javax.mail.event.MessageCountEvent;
 
@@ -31,7 +33,6 @@ public abstract class Mail implements MailInterface {
 
 	// handler 和 线程池 所有Mail子类公用 构造方法中直接传递
 	protected ApiService handler;
-	protected ExecutorService es;
 
 	// 账号密码
 	protected String userName;
@@ -45,8 +46,6 @@ public abstract class Mail implements MailInterface {
 
 	public Mail(ApiService handler, String userName, String passWord, List<String> folders) {
 		this.handler = handler;
-		this.es = SingleThreadPool.getInstance().threadPool();
-
 		this.userName = userName;
 		this.passWord = passWord;
 
@@ -73,12 +72,30 @@ public abstract class Mail implements MailInterface {
 		session = Session.getInstance(props);
 
 		store = session.getStore(protocol);
-		store.connect(userName, passWord);
-		
-		
-		idleManager = new IdleManager(session, es);
-		folderObjects = new ArrayList<IMAPFolder>();
+		// 方便调试 加上监听
+		store.addConnectionListener(new ConnectionListener() {
+			@Override
+			public void opened(ConnectionEvent e) {
+				// handler.setModelText(getMailName() + "已经连接", 0);
+				System.out.println("邮箱" + getMailName() + " opened");
+			}
 
+			@Override
+			public void disconnected(ConnectionEvent e) {
+				// handler.setModelText(getMailName() + " disconnected", 0);
+				System.out.println("邮箱" + getMailName() + " disconnected");
+			}
+
+			@Override
+			public void closed(ConnectionEvent e) {
+				// handler.setModelText(getMailName()+" closed" , 0);
+				System.out.println("邮箱" + getMailName() + " closed");
+			}
+		});
+		store.connect(userName, passWord);
+
+		idleManager = new IdleManager(session, SingleThreadPool.getInstance().threadPool());
+		folderObjects = new ArrayList<IMAPFolder>();
 	};
 
 	public abstract Properties getProperties();
@@ -90,9 +107,26 @@ public abstract class Mail implements MailInterface {
 
 		for (String folderName : folders) {
 			IMAPFolder temp = (IMAPFolder) store.getFolder(folderName);
+			// 为了调试加上监听
+			temp.addConnectionListener(new ConnectionListener() {
+				@Override
+				public void opened(ConnectionEvent e) {
+					System.out.println("文件夹:" + getMailName() + folderName + " opened");
+				}
+
+				@Override
+				public void disconnected(ConnectionEvent e) {
+					System.out.println("文件夹:" + getMailName() + folderName + " disconnected");
+				}
+
+				@Override
+				public void closed(ConnectionEvent e) {
+					System.out.println("文件夹:" + getMailName() + folderName + " closed");
+				}
+			});
+
 			temp.open(Folder.READ_ONLY);// 在这一步，收件箱所有邮件将被下载到本地
 
-			System.out.println(folderName);
 			// Message message = folder.getMessage(size);//取得最新的那个邮件
 			System.out.println("Size:" + temp.getMessageCount());
 			System.out.println("unread:" + temp.getUnreadMessageCount());
@@ -100,13 +134,10 @@ public abstract class Mail implements MailInterface {
 			System.out.println();
 
 			temp.addMessageCountListener(new MessageCountAdapter() {
-
 				@Override
 				public void messagesAdded(MessageCountEvent e) {
 					super.messagesAdded(e);
-
 					IMAPFolder folder = (IMAPFolder) e.getSource();
-					
 					Message[] msgs = e.getMessages();
 					for (int i = 0; i < msgs.length; i++) {
 						try {
@@ -118,32 +149,32 @@ public abstract class Mail implements MailInterface {
 					}
 					try {
 						idleManager.watch(folder);
-					} catch (Exception e1) {
-						e1.printStackTrace();
+					} catch (MessagingException e2) {
+						e2.printStackTrace();
 					}
 
 				}
 
 			});
-			
+
 			idleManager.watch(temp);
 			folderObjects.add(temp);
+
+			handler.setModelText(getMailName() + " " + folderName + " 已关注", 0);
 		}
 	}
 
-	
-	
 	/**
 	 * 待定的心跳检测
 	 */
 	public void heartWork() {
-		
+
 		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
 				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
-				try {
-					for (IMAPFolder imapFolder : folderObjects) {
+				for (IMAPFolder imapFolder : folderObjects) {
+					try {
 						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
 							@Override
 							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
@@ -152,9 +183,18 @@ public abstract class Mail implements MailInterface {
 							}
 						});
 						idleManager.watch(imapFolder);
+					} catch (FolderClosedException cfe) {
+						cfe.printStackTrace();
+						try {
+							if (!imapFolder.isOpen()) {
+								imapFolder.open(Folder.READ_ONLY);
+							}
+						} catch (MessagingException e1) {
+							e1.printStackTrace();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			}
 		}, 9, 9, TimeUnit.MINUTES);
