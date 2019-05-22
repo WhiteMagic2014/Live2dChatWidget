@@ -182,7 +182,6 @@ public abstract class Mail implements MailInterface {
 								return null;
 							}
 						});
-						idleManager.watch(imapFolder);
 					} catch (FolderClosedException cfe) {
 						cfe.printStackTrace();
 						try {
@@ -195,6 +194,13 @@ public abstract class Mail implements MailInterface {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+					//一定要重新watch
+					try {
+						idleManager.watch(imapFolder);
+					} catch (MessagingException e) {
+						e.printStackTrace();
+					}
+
 				}
 			}
 		}, 9, 9, TimeUnit.MINUTES);
