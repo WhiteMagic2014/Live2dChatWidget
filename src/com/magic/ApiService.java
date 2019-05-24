@@ -288,7 +288,11 @@ public class ApiService {
 	 * @return
 	 */
 	public String analysisStr(String str) {
-		str = str.replace("[name]", "{$username}").replace("[cqname]", "我").replace("NULL", "=￣ω￣=");
+		System.out.println(str);
+		str = str.replace("[name]", "{$username}")
+				.replace("［name］", "{$username}")
+				.replace("[cqname]", "我")
+				.replace("NULL", "=￣ω￣=");
 		return str;
 	}
 
