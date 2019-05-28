@@ -172,29 +172,34 @@ public abstract class Mail implements MailInterface {
 		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					System.out.println(Thread.currentThread().getName() + "————" + getMailName());
-					for (IMAPFolder imapFolder : folderObjects) {
-						try {
-							imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-								@Override
-								public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
-									arg0.simpleCommand("NOOP", null);
-									return null;
-								}
-							});
-						} catch (FolderClosedException cfe) {
-							cfe.printStackTrace();
-							if (!imapFolder.isOpen()) {
+				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
+				for (IMAPFolder imapFolder : folderObjects) {
+					try {
+						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+							@Override
+							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
+								arg0.simpleCommand("NOOP", null);
+								return null;
+							}
+						});
+					} catch (FolderClosedException cfe) {
+						cfe.printStackTrace();
+						if (!imapFolder.isOpen()) {
+							try {
 								imapFolder.open(Folder.READ_ONLY);
+							} catch (MessagingException e) {
+								e.printStackTrace();
 							}
 						}
-						// 一定要重新watch
-						idleManager.watch(imapFolder);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} catch (Exception e) {
-					System.out.println("让老子看看你葫芦里装的什么B " + e.getMessage());
-					e.printStackTrace();
+					// 一定要重新watch
+					try {
+						idleManager.watch(imapFolder);
+					} catch (MessagingException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 
