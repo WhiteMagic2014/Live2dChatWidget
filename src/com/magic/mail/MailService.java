@@ -21,14 +21,12 @@ public class MailService {
 	 * 网易163
 	 */
 	public static final String WY163 = "wy163";
-	
+
 	/**
 	 * sina
 	 */
 	public static final String SINA = "sina";
-	
-	
-	
+
 	// 负责某一个邮箱的监听实例
 	private List<MailInterface> mailHandlers;
 	// api代理类
@@ -62,22 +60,28 @@ public class MailService {
 			MailInterface qqexMail = new ExQQMail(handler, userName, passWord, folders);
 			mailHandlers.add(qqexMail);
 			break;
-			
-			
+
 		case WY163:
 			MailInterface wy163Mail = new Wy163Mail(handler, userName, passWord, folders);
 			mailHandlers.add(wy163Mail);
 			break;
-			
+
 		case SINA:
 			MailInterface sinaMail = new SinaMail(handler, userName, passWord, folders);
 			mailHandlers.add(sinaMail);
 			break;
-			
+
 		default:
 			break;
 		}
 
+	}
+
+	/**
+	 * 检查目前 所有邮箱监听状态
+	 */
+	public void check() {
+		mailHandlers.forEach(mh -> mh.check());
 	}
 
 	/**

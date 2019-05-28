@@ -77,19 +77,19 @@ public abstract class Mail implements MailInterface {
 			@Override
 			public void opened(ConnectionEvent e) {
 				// handler.setModelText(getMailName() + "已经连接", 0);
-				System.out.println("邮箱" + getMailName() + " opened");
+				System.out.println("_____邮箱" + getMailName() + " opened");
 			}
 
 			@Override
 			public void disconnected(ConnectionEvent e) {
 				// handler.setModelText(getMailName() + " disconnected", 0);
-				System.out.println("邮箱" + getMailName() + " disconnected");
+				System.out.println("_____邮箱" + getMailName() + " disconnected");
 			}
 
 			@Override
 			public void closed(ConnectionEvent e) {
 				// handler.setModelText(getMailName()+" closed" , 0);
-				System.out.println("邮箱" + getMailName() + " closed");
+				System.out.println("_____邮箱" + getMailName() + " closed");
 			}
 		});
 		store.connect(userName, passWord);
@@ -102,12 +102,12 @@ public abstract class Mail implements MailInterface {
 
 	public abstract String getMailName();
 
-	// 创建监听
+	// 文件夹watch
 	public void createFoldersListen(List<String> folders) throws Exception {
 
 		for (String folderName : folders) {
 			IMAPFolder temp = (IMAPFolder) store.getFolder(folderName);
-			// 为了调试加上监听
+			// 连接监听
 			temp.addConnectionListener(new ConnectionListener() {
 				@Override
 				public void opened(ConnectionEvent e) {
@@ -132,7 +132,7 @@ public abstract class Mail implements MailInterface {
 			System.out.println("unread:" + temp.getUnreadMessageCount());
 			System.out.println("new:" + temp.getNewMessageCount());
 			System.out.println();
-
+			// 收件监听
 			temp.addMessageCountListener(new MessageCountAdapter() {
 				@Override
 				public void messagesAdded(MessageCountEvent e) {
@@ -165,44 +165,39 @@ public abstract class Mail implements MailInterface {
 	}
 
 	/**
-	 * 待定的心跳检测
+	 * 文件夹心跳检测
 	 */
 	public void heartWork() {
 
 		SingleThreadPool.getInstance().scheduledThreadPool().scheduleAtFixedRate(new Runnable() {
 			@Override
 			public void run() {
-				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
-				for (IMAPFolder imapFolder : folderObjects) {
-					try {
-						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-							@Override
-							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
-								arg0.simpleCommand("NOOP", null);
-								return null;
-							}
-						});
-					} catch (FolderClosedException cfe) {
-						cfe.printStackTrace();
+				try {
+					System.out.println(Thread.currentThread().getName() + "————" + getMailName());
+					for (IMAPFolder imapFolder : folderObjects) {
 						try {
+							imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
+								@Override
+								public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
+									arg0.simpleCommand("NOOP", null);
+									return null;
+								}
+							});
+						} catch (FolderClosedException cfe) {
+							cfe.printStackTrace();
 							if (!imapFolder.isOpen()) {
 								imapFolder.open(Folder.READ_ONLY);
 							}
-						} catch (MessagingException e1) {
-							e1.printStackTrace();
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					//一定要重新watch
-					try {
+						// 一定要重新watch
 						idleManager.watch(imapFolder);
-					} catch (MessagingException e) {
-						e.printStackTrace();
 					}
-
+				} catch (Exception e) {
+					System.out.println("让老子看看你葫芦里装的什么B " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
+
 		}, 9, 9, TimeUnit.MINUTES);
 
 	}
@@ -225,6 +220,20 @@ public abstract class Mail implements MailInterface {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void check() {
+		System.out.println();
+		System.out.println("####################");
+		System.out.println(getMailName() + " 当前状态:");
+		System.out.println("store是否连接: " + store.isConnected());
+		System.out.println("IdleManager是否运行:" + idleManager.isRunning());
+		folderObjects.stream().map(
+				folder -> folder.getFullName() + ":Subscribe-" + folder.isSubscribed() + ",open-" + folder.isOpen())
+				.forEach(System.out::println);
+		System.out.println("####################");
+		System.out.println();
 	}
 
 }

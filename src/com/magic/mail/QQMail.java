@@ -22,11 +22,12 @@ import com.sun.mail.imap.IdleManager;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 
 /**
- * qq 邮箱的监听
+ * qq 邮箱的监听 已废弃 现在用 @QQMailPro
  * 
  * @author chenhaoyu
  *
  */
+@Deprecated
 public class QQMail implements MailInterface {
 
 	private ApiService handler;
@@ -146,7 +147,6 @@ public class QQMail implements MailInterface {
 
 	}
 
-	
 	/**
 	 * 待定的心跳检测
 	 */
@@ -198,6 +198,11 @@ public class QQMail implements MailInterface {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void check() {
+		System.out.println("这边未实现");
 	}
 
 }
