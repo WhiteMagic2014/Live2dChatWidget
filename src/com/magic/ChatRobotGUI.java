@@ -270,7 +270,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 	public void magicShow() {
 		for (int i = 0; i < 50; i++) {
 			try {
-				Thread.sleep(50);
+				Thread.sleep(20);
 			} catch (Exception e) {
 			}
 			AWTUtilities.setWindowOpacity(fatherFrame, i * 0.02f);
