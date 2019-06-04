@@ -35,7 +35,6 @@ public class MagicWebSocketClient extends WebSocketClient {
 		if (arg2) {
 			magicReconnect();
 		} else {
-			future.cancel(true);
 			System.out.println("WebSocket onClose");
 		}
 	}
@@ -75,7 +74,8 @@ public class MagicWebSocketClient extends WebSocketClient {
 			public void run() {
 				try {
 					handle.setModelText("一颗心扑通扑通的狂跳~", 0);// 默认让第一个接受心跳
-					System.out.println(System.currentTimeMillis() + "————WebSocket Heart");
+					System.out.println(Thread.currentThread().getName() + " ———— WebSocket Heart ———— "
+							+ System.currentTimeMillis());
 				} catch (Exception e) {
 					System.out.println("心跳出错");
 					e.printStackTrace();
