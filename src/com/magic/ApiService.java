@@ -2,6 +2,7 @@ package com.magic;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -11,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -26,6 +31,8 @@ public class ApiService {
 	boolean WSFlag = false;
 
 	List<OptionMenu> optionMenuList = null;
+	
+	JFileChooser fileChooser = null;
 
 	public ApiService(String port) {
 		try {
@@ -38,6 +45,11 @@ public class ApiService {
 		}
 
 		mailService = new MailService(this);
+		
+		
+		fileChooser = new JFileChooser();
+		FileFilter filter = new FileNameExtensionFilter("图片", "JPG", "JPEG", "GIF", "BMP", "PNG");// 设置文件过滤器，只列出JPG或GIF格式的图片
+		fileChooser.setFileFilter(filter);
 	}
 
 	/*
@@ -148,6 +160,33 @@ public class ApiService {
 //				shShell("open /Users/chenhaoyu/Documents/workspace-sts-3.9.5.RELEASE/");
 //			}
 //		});
+		
+		optionMenuList.add(new OptionMenu() {
+			
+			@Override
+			public String menuName() {
+				return "选张图，变个魔术给你看";
+			}
+			
+			@Override
+			public void execute() {
+				
+				SingleThreadPool.getInstance().threadPool().submit(new Runnable() {
+					@Override
+					public void run() {
+						int i = fileChooser.showOpenDialog(null);// 显示文件选择对话框
+						if (i == JFileChooser.APPROVE_OPTION) {
+							File selectedFile = fileChooser.getSelectedFile();// 获得选中的文件对象
+							System.out.println(selectedFile.getAbsolutePath());
+							AsciiPic.createPicFile(selectedFile.getAbsolutePath());
+							setModelText("噔噔！去图片那看看吧~", 0);
+						}else {
+							setModelText("不想看我的魔术吗?", 0);
+						}
+					}
+				});
+			}
+		});
 		
 		optionMenuList.add(new OptionMenu() {
 			

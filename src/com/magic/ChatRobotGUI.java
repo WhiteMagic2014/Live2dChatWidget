@@ -21,7 +21,7 @@ import com.sun.awt.AWTUtilities;
 
 public class ChatRobotGUI implements ActionListener, Runnable {
 
-	public String version = "1.1.1";
+	public String version = "1.2.0";
 	
 	ApiService apiService;
 
