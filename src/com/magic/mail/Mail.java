@@ -44,6 +44,9 @@ public abstract class Mail implements MailInterface {
 	protected IdleManager idleManager;
 	protected List<IMAPFolder> folderObjects;
 
+	// 是否人为需要关闭
+	protected boolean closeFlag = false;
+
 	public Mail(ApiService handler, String userName, String passWord, List<String> folders) {
 		this.handler = handler;
 		this.userName = userName;
@@ -122,6 +125,17 @@ public abstract class Mail implements MailInterface {
 				@Override
 				public void closed(ConnectionEvent e) {
 					System.out.println("文件夹:" + getMailName() + folderName + " closed");
+
+					if (!closeFlag) {
+						try {
+							temp.open(Folder.READ_ONLY);
+							idleManager.watch(temp);
+						} catch (MessagingException e1) {
+							System.out.println("文件夹:" + getMailName() + folderName + " 重启失败");
+							e1.printStackTrace();
+						}
+					}
+
 				}
 			});
 
@@ -173,8 +187,8 @@ public abstract class Mail implements MailInterface {
 			@Override
 			public void run() {
 				System.out.println(Thread.currentThread().getName() + "————" + getMailName());
-				for (IMAPFolder imapFolder : folderObjects) {
-					try {
+				try {
+					for (IMAPFolder imapFolder : folderObjects) {
 						imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
 							@Override
 							public Object doCommand(IMAPProtocol arg0) throws ProtocolException {
@@ -182,24 +196,10 @@ public abstract class Mail implements MailInterface {
 								return null;
 							}
 						});
-					} catch (FolderClosedException cfe) {
-						cfe.printStackTrace();
-						if (!imapFolder.isOpen()) {
-							try {
-								imapFolder.open(Folder.READ_ONLY);
-							} catch (MessagingException e) {
-								e.printStackTrace();
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					// 一定要重新watch
-					try {
 						idleManager.watch(imapFolder);
-					} catch (MessagingException e) {
-						e.printStackTrace();
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 
@@ -211,6 +211,7 @@ public abstract class Mail implements MailInterface {
 	@Override
 	public void close() {
 		try {
+			closeFlag = true;
 			if (idleManager != null && idleManager.isRunning()) {
 				idleManager.stop();
 			}
