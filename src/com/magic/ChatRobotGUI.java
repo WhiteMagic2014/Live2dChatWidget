@@ -167,7 +167,7 @@ public class ChatRobotGUI implements ActionListener, Runnable {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == inputField) {
 			String input = inputField.getText();
-
+			System.out.println("输入  "+input);
 			String origin = "";
 
 			if (input.contains("$菜单")) {

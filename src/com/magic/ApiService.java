@@ -161,6 +161,20 @@ public class ApiService {
 //			}
 //		});
 		
+		
+		optionMenuList.add(new OptionMenu() {
+				
+				@Override
+				public String menuName() {
+					return "检查邮箱监听状态";
+				}
+				
+				@Override
+				public void execute() {
+					mailService.check();
+				}
+			});
+		
 		optionMenuList.add(new OptionMenu() {
 			
 			@Override
@@ -188,18 +202,6 @@ public class ApiService {
 			}
 		});
 		
-		optionMenuList.add(new OptionMenu() {
-			
-			@Override
-			public String menuName() {
-				return "检查邮箱监听状态";
-			}
-			
-			@Override
-			public void execute() {
-				mailService.check();
-			}
-		});
 		
 		optionMenuList.add(new OptionMenu() {
 			@Override
